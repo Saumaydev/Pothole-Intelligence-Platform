@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: pothole-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/trained_models:/app/trained_models
+      - ./backend/temp_images:/app/temp_images
+      - ./backend/reports:/app/reports
+    environment:
+      - DATABASE_URL=sqlite:///./pothole_platform.db
+      - MAPILLARY_CLIENT_TOKEN=${MAPILLARY_CLIENT_TOKEN:-}
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: pothole-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped

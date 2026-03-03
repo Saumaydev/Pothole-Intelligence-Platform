@@ -1,0 +1,12 @@
+analysis_id,road_name,city,state,road_length_km,segment_index,pothole_count,pothole_density_per_km,avg_severity,risk_level,predicted_speed_kmh,speed_reduction_percent,total_potholes_detected,overall_risk_level
+19,MG Road,Bengaluru,Karnataka,2.657,0,9,111.52,0.7667,critical,8.0,84.0,124,critical
+19,MG Road,Bengaluru,Karnataka,2.657,1,11,262.53,0.5909,critical,8.0,84.0,124,critical
+19,MG Road,Bengaluru,Karnataka,2.657,2,16,110.97,0.6187,critical,8.0,84.0,124,critical
+19,MG Road,Bengaluru,Karnataka,2.657,3,15,60.25,0.6867,critical,8.0,84.0,124,critical
+19,MG Road,Bengaluru,Karnataka,2.657,4,12,48.2,0.6917,critical,8.0,84.0,124,critical
+19,MG Road,Bengaluru,Karnataka,2.657,5,5,20.08,0.68,critical,8.0,84.0,124,critical
+19,MG Road,Bengaluru,Karnataka,2.657,6,13,52.22,0.6615,critical,8.0,84.0,124,critical
+19,MG Road,Bengaluru,Karnataka,2.657,7,18,72.3,0.6278,critical,8.0,84.0,124,critical
+19,MG Road,Bengaluru,Karnataka,2.657,8,16,64.26,0.5938,critical,8.0,84.0,124,critical
+19,MG Road,Bengaluru,Karnataka,2.657,9,16,64.26,0.6313,critical,8.0,84.0,124,critical
+19,MG Road,Bengaluru,Karnataka,2.657,10,9,194.34,0.5222,critical,8.0,84.0,124,critical
