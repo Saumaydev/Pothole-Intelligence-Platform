@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-OVERPASS_URL = "https://overpass.kumi.systems/api/interpreter"
+OVERPASS_URL = "https://lz4.overpass-api.de/api/interpreter"
 
 
 async def get_road_geometry(
