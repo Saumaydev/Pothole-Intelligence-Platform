@@ -28,11 +28,34 @@
   /* Layout */
   --radius: 12px;
 }
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+/* ===== LIGHT THEME ===== */
+body.light-theme {
+
+  /* Backgrounds */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #f1f5f9;
+  --bg-card-hover: #e2e8f0;
+
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+
+  /* Accent Colors */
+  --accent-blue: #3b82f6;
+  --accent-orange: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-green: #16a34a;
+  --accent-purple: #7c3aed;
+
+  /* Borders & Shadows */
+  --border-color: rgba(0,0,0,0.08);
+  --shadow: 0 8px 32px rgba(0,0,0,0.15);
 }
 
 body {
@@ -40,6 +63,8 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   overflow-x: hidden;
+
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .app {
