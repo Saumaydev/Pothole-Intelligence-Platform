@@ -1,3 +1,4 @@
+import Loader from './Loader';
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -25,7 +26,7 @@ const LoadingOverlay = ({ progress }) => {
       animate={{ opacity: 1 }}
     >
       <div className="loading-card">
-        <div className="loading-spinner-large" />
+        <Loader />
         <h3>Analyzing Road...</h3>
         <p className="loading-message">{progress.message}</p>
 
