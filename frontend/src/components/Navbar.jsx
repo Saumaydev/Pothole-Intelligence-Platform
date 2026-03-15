@@ -1,3 +1,4 @@
+import Switch from "./Switch";
 import React from 'react';
 import { FaRoad, FaGithub } from 'react-icons/fa';
 
@@ -11,10 +12,13 @@ const Navbar = () => (
       </div>
     </div>
     <div className="navbar-links">
-      <span className="version-badge">v2.0</span>
-      <a href="https://github.com/Saumaydev/Pothole-Intelligence-Platform" target="_blank" rel="noreferrer">
-        <FaGithub size={22} />
-      </a>
+     <span className="version-badge">v2.0</span>
+
+     <Switch />
+
+     <a href="https://github.com/Saumaydev/Pothole-Intelligence-Platform" target="_blank" rel="noreferrer">
+     <FaGithub size={22} />
+     </a>
     </div>
   </nav>
 );
