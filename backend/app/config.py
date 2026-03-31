@@ -37,6 +37,13 @@ class Settings:
     REPORTS_DIR: str = os.getenv(
         "REPORTS_DIR", str(BASE_DIR / "reports")
     )
+    GEOCODING_DELAY_SECONDS: float = float(
+    os.getenv("GEOCODING_DELAY_SECONDS", "1.0")
+    )
+
+    GEOCODING_MAX_RETRIES: int = int(
+    os.getenv("GEOCODING_MAX_RETRIES", "3")
+    )
 
     # Speed Prediction Constants
     BASE_SPEEDS = {
