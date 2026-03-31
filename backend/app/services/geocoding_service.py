@@ -83,7 +83,23 @@ async def geocode_road(
             response = await client.get(
                 NOMINATIM_URL, params=params, headers=headers
             )
-            results = response.json()
+            if response.status_code == 429:
+                logger.warning("Rate limited (429)")
+                return None
+
+            if response.status_code != 200:
+                logger.error(f"Bad response: {response.status_code}")
+                return None
+
+            if not response.text.strip():
+                logger.error("Empty response received")
+                return None
+
+            try:
+                results = response.json()
+            except Exception as e:
+                logger.error(f"JSON parse error: {e}")
+                return None
 
     if not results:
         raise ValueError(f"Could not find road: {road_name}")
