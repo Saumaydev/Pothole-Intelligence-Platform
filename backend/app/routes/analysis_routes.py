@@ -318,13 +318,19 @@ async def run_full_analysis(analysis_id: int, request: AnalysisRequest):
         _update_progress(analysis_id, "completed", 100, "Analysis complete!")
         logger.info(f"Analysis {analysis_id} completed successfully")
 
-    except Exception as e:
-        logger.error(f"Analysis {analysis_id} failed: {e}")
-        db_analysis.status = "failed"
-        db_analysis.analysis_metadata = {"error": str(e)}
-        db.commit()
-        _update_progress(analysis_id, "failed", 0, f"Error: {str(e)}")
-
+   except Exception as e:
+    logger.exception(f"Analysis {analysis_id} failed")
+    db_analysis.status = "failed"
+    db_analysis.analysis_metadata = {
+        "error": f"{type(e).__name__}: {str(e)}"
+    }
+    db.commit()
+    _update_progress(
+        analysis_id,
+        "failed",
+        0,
+        f"Error: {type(e).__name__}: {e}"
+    )
     finally:
         db.close()
 
