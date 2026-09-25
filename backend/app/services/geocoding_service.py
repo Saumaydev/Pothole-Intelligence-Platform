@@ -1,18 +1,18 @@
-import httpx
 import asyncio
-from typing import Optional, Dict, Any
-from app.config import settings
 import logging
+from typing import Optional, Dict, Any
+
+import httpx
+
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 
-# ✅ Simple in-memory cache
 cache = {}
 
 
-# ---------------- MAIN FUNCTION ----------------
 async def geocode_road(
     road_name: str,
     city: Optional[str] = None,
@@ -20,17 +20,19 @@ async def geocode_road(
 ) -> Dict[str, Any]:
 
     query_parts = [road_name]
+
     if city:
         query_parts.append(city)
+
     if state:
         query_parts.append(state)
+
     query_parts.append("India")
 
     query = ", ".join(query_parts)
 
-    # ✅ CACHE CHECK
     if query in cache:
-        logger.info(f"Cache hit for: {query}")
+        logger.info(f"Nominatim cache hit: {query}")
         return cache[query]
 
     params = {
@@ -42,88 +44,131 @@ async def geocode_road(
     }
 
     headers = {
-        "User-Agent": settings.NOMINATIM_USER_AGENT
+        "User-Agent": settings.NOMINATIM_USER_AGENT,
+        "Accept": "application/json",
     }
 
-    # ✅ RETRY LOGIC
-    results = None
-    for attempt in range(settings.GEOCODING_MAX_RETRIES):
+    timeout = httpx.Timeout(
+        connect=15.0,
+        read=30.0,
+        write=30.0,
+        pool=30.0,
+    )
 
-        try:
-            await asyncio.sleep(settings.GEOCODING_DELAY_SECONDS)  # ✅ DELAY
+    async with httpx.AsyncClient(
+        timeout=timeout,
+        headers=headers,
+        follow_redirects=True,
+    ) as client:
 
-            async with httpx.AsyncClient(timeout=30.0) as client:
+        for attempt in range(1, settings.GEOCODING_MAX_RETRIES + 1):
+
+            try:
+                if attempt > 1:
+                    await asyncio.sleep(settings.GEOCODING_DELAY_SECONDS)
+
+                logger.info(
+                    f"Nominatim request attempt {attempt}/{settings.GEOCODING_MAX_RETRIES}: {query}"
+                )
+
                 response = await client.get(
-                    NOMINATIM_URL, params=params, headers=headers
+                    NOMINATIM_URL,
+                    params=params,
+                )
+
+                logger.info(
+                    f"Nominatim response: {response.status_code}"
                 )
 
                 if response.status_code == 429:
-                    logger.warning("429 Too Many Requests → retrying...")
-                    await asyncio.sleep(2)
+                    logger.warning("Nominatim rate limit reached")
+                    await asyncio.sleep(2 * attempt)
                     continue
 
                 response.raise_for_status()
+
                 results = response.json()
 
-            if results:
+                if results:
+                    result = _build_result(
+                        results[0],
+                        road_name,
+                        city,
+                        state,
+                    )
+
+                    cache[query] = result
+
+                    logger.info(
+                        f"Geocoded '{road_name}' -> "
+                        f"{result['lat']}, {result['lng']}"
+                    )
+
+                    return result
+
                 break
 
-        except Exception as e:
-            logger.error(f"Geocoding attempt {attempt+1} failed: {e}")
-            await asyncio.sleep(2)
+            except (
+                httpx.ConnectError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+                httpx.NetworkError,
+            ) as e:
 
-    # ✅ FALLBACK SIMPLE QUERY
-    if not results:
-        query_simple = f"{road_name}, India"
-        params["q"] = query_simple
+                logger.warning(
+                    f"Nominatim network error on attempt {attempt}: {e}"
+                )
 
-        await asyncio.sleep(settings.GEOCODING_DELAY_SECONDS)
+                if attempt == settings.GEOCODING_MAX_RETRIES:
+                    raise RuntimeError(
+                        f"Unable to connect to Nominatim after "
+                        f"{settings.GEOCODING_MAX_RETRIES} attempts"
+                    ) from e
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(
-                NOMINATIM_URL, params=params, headers=headers
-            )
-            if response.status_code == 429:
-                logger.warning("Rate limited (429)")
-                return None
+            except httpx.HTTPStatusError as e:
 
-            if response.status_code != 200:
-                logger.error(f"Bad response: {response.status_code}")
-                return None
+                logger.error(
+                    f"Nominatim HTTP error: "
+                    f"{e.response.status_code}"
+                )
 
-            if not response.text.strip():
-                logger.error("Empty response received")
-                return None
+                raise
 
-            try:
-                results = response.json()
-            except Exception as e:
-                logger.error(f"JSON parse error: {e}")
-                return None
+            except Exception:
+                logger.exception(
+                    "Unexpected Nominatim error"
+                )
+                raise
 
-    if not results:
-        raise ValueError(f"Could not find road: {road_name}")
+    raise ValueError(
+        f"Could not find road: {road_name}"
+    )
 
-    best = results[0]
+
+def _build_result(
+    best: Dict[str, Any],
+    road_name: str,
+    city: Optional[str],
+    state: Optional[str],
+) -> Dict[str, Any]:
+
     address = best.get("address", {})
 
-    result = {
+    return {
         "lat": float(best["lat"]),
         "lng": float(best["lon"]),
-        "display_name": best.get("display_name", road_name),
+        "display_name": best.get(
+            "display_name",
+            road_name
+        ),
         "osm_id": best.get("osm_id"),
         "osm_type": best.get("osm_type"),
-        "city": address.get("city")
-        or address.get("town")
-        or address.get("village")
-        or city,
+        "city": (
+            address.get("city")
+            or address.get("town")
+            or address.get("village")
+            or city
+        ),
         "state": address.get("state", state),
         "boundingbox": best.get("boundingbox"),
     }
-
-    # ✅ SAVE TO CACHE
-    cache[query] = result
-
-    logger.info(f"Geocoded '{road_name}' → ({best['lat']}, {best['lon']})")
-
-    return result
